@@ -1,62 +1,56 @@
 const fs = require("fs");
 
-let twoCount = 0;
-let threeCount = 0;
-
 function readInput() {
   const lineReader = require("readline").createInterface({
     input: require("fs").createReadStream("input.txt")
   });
 
-  let packages = [];
+  let claims = [];
+  const fabric = [];
+  fabric.length = 1000;
+
+  const row = [];
+  row.length = 1000;
+
+  let i,
+    j,
+    doubled = 0;
+  for (i = 0; i < fabric.length; i++) {
+    fabric[i] = [...row];
+  }
+
   lineReader
     .on("line", line => {
-      packages.push(line);
+      const claim_data = line.split(" ");
+      const [id, at, position, size] = claim_data;
+      let [left, top] = position.split(",");
+      // clean top...
+      top = top.substr(0, top.length - 1);
+      let [width, height] = size.split("x");
+      claims.push({
+        id,
+        top: parseInt(top, 10),
+        left: parseInt(left, 10),
+        width: parseInt(width, 10),
+        height: parseInt(height, 10)
+      });
     })
     .on("close", () => {
-      // sort the list
-      packages = packages.sort();
-
-      let i, j, last_diff;
-      for (i = 1; i < packages.length; i++) {
-        const current = packages[i].split("");
-        const prev = packages[i - 1].split("");
-
-        if (current.length !== prev.length) {
-          continue;
-        }
-
-        let diffs = 0;
-        for (j = 0; j < current.length; j++) {
-          if (current[j] !== prev[j]) {
-            diffs++;
-
-            if (diffs > 1) {
-              break;
+      claims.forEach(({ id, top, left, width, height }) => {
+        for (i = top; i < top + height; i++) {
+          for (j = left; j < left + width; j++) {
+            if ("undefined" === typeof fabric[i][j]) {
+              fabric[i][j] = id;
+            } else {
+              if ("X" !== fabric[i][j]) {
+                doubled++;
+              }
+              fabric[i][j] = "X";
             }
-
-            last_diff = j;
           }
         }
-
-        // jumping out as early as possible...
-        if (diffs === 1) {
-          console.log(
-            "diff at pos",
-            last_diff,
-            current[last_diff],
-            prev[last_diff]
-          );
-          console.log(current.join(""));
-          console.log(prev.join(""));
-          current.splice(last_diff, 1);
-          prev.splice(last_diff, 1);
-
-          console.log(current.join(""));
-          console.log(prev.join(""));
-          break;
-        }
-      }
+      });
+      console.log(doubled);
 
       process.exit(0);
     });
