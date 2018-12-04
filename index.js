@@ -1,7 +1,7 @@
 const fs = require("fs");
 
-let sum = 0;
-let doubleCheck = {};
+let twoCount = 0;
+let threeCount = 0;
 
 function readInput() {
   const lineReader = require("readline").createInterface({
@@ -10,22 +10,30 @@ function readInput() {
 
   lineReader
     .on("line", line => {
-      sum += parseInt(line, 10);
+      const dict = {};
 
-      if (typeof doubleCheck[sum] === "undefined") {
-        doubleCheck[sum] = 1;
-      } else {
-        doubleCheck[sum] = doubleCheck[sum]++;
-        console.log("END", sum, doubleCheck[sum]);
-        process.exit(0);
+      for (let i = 0; i < line.length; i++) {
+        let char = line[i];
+        if ("undefined" === typeof dict[char]) {
+          dict[char] = 0;
+        }
+
+        dict[char] = dict[char] + 1;
+      }
+
+      if (Object.entries(dict).filter(([key, val]) => val === 2).length) {
+        twoCount++;
+      }
+
+      if (Object.entries(dict).filter(([key, val]) => val === 3).length) {
+        threeCount++;
       }
     })
     .on("close", () => {
       console.log("ended");
-      console.log(sum);
-      // process.exit(0);
-
-      readInput();
+      console.log(twoCount, threeCount);
+      console.log(twoCount * threeCount);
+      process.exit(0);
     });
 }
 
