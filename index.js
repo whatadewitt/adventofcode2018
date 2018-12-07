@@ -68,28 +68,35 @@ function readInput() {
         }
       });
 
+      const findMaxIndex = arr => {
+        let maxVal = -1,
+          maxIdx = -1;
+        arr.forEach((val, idx) => {
+          if (val > maxVal) {
+            maxVal = val;
+            maxIdx = idx;
+          }
+        });
+
+        return [maxIdx, maxVal];
+      };
+
       let guardHighVal = -1,
-        guardHighIdx = -1;
+        guardHighIdx = -1,
+        guardHighKey = "";
+      Object.keys(guardLogs).forEach(key => {
+        let [maxIdx, maxVal] = findMaxIndex(guardLogs[key]);
 
-      Object.keys(guardTotals).forEach(k => {
-        if (guardTotals[k] > guardHighVal) {
-          guardHighVal = guardTotals[k];
-          guardHighIdx = k;
+        if (maxVal > guardHighVal) {
+          guardHighVal = maxVal;
+          guardHighIdx = maxIdx;
+          guardHighKey = key;
         }
+        // console.log(key, maxIdx, maxVal);
       });
 
-      let maxVal = -1,
-        maxIdx = -1;
-
-      guardLogs[guardHighIdx].forEach((val, idx) => {
-        if (val > maxVal) {
-          maxVal = val;
-          maxIdx = idx;
-        }
-      });
-
-      console.log(maxVal, maxIdx, guardHighIdx);
-      console.log(guardHighIdx * maxIdx);
+      console.log(guardHighIdx, guardHighVal, guardHighKey);
+      console.log(guardHighIdx * guardHighKey);
 
       process.exit(0);
     });
