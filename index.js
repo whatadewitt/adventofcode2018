@@ -1,57 +1,95 @@
 const fs = require("fs");
+const dateFns = require("date-fns");
 
 function readInput() {
   const lineReader = require("readline").createInterface({
     input: require("fs").createReadStream("input.txt")
   });
 
-  let claims = [];
-  const fabric = [];
-  fabric.length = 1000;
-
-  const row = [];
-  row.length = 1000;
-
-  let i, j;
-  for (i = 0; i < fabric.length; i++) {
-    fabric[i] = [...row];
+  let records = [];
+  let emptyArray = [];
+  for (let i = 0; i < 59; i++) {
+    emptyArray[i] = 0;
   }
 
   lineReader
     .on("line", line => {
-      const claim_data = line.split(" ");
-      const [id, at, position, size] = claim_data;
-      let [left, top] = position.split(",");
-      // clean top...
-      top = top.substr(0, top.length - 1);
-      let [width, height] = size.split("x");
-      claims.push({
-        id: parseInt(id.substr(1), 10),
-        top: parseInt(top, 10),
-        left: parseInt(left, 10),
-        width: parseInt(width, 10),
-        height: parseInt(height, 10),
-        winner: true
+      const match = /\[1518-(\d+)-(\d+) (\d+):(\d+)\]\s(.*)/.exec(line);
+
+      let timestamp = new Date(
+        2018, // because 1518 doesn't matter?
+        parseInt(match[1], 10),
+        parseInt(match[2], 10),
+        parseInt(match[3], 10),
+        parseInt(match[4], 10)
+      );
+
+      records.push({
+        time: timestamp,
+        min: match[4],
+        log: match[5]
       });
     })
     .on("close", () => {
-      claims.forEach(({ id, top, left, width, height }) => {
-        for (i = top; i < top + height; i++) {
-          for (j = left; j < left + width; j++) {
-            if ("undefined" === typeof fabric[i][j]) {
-              fabric[i][j] = id;
-            } else {
-              if ("X" !== fabric[i][j]) {
-                claims[fabric[i][j] - 1].winner = false;
-              }
+      records = records.sort((a, b) => {
+        if (a.time.getTime() < b.time.getTime()) return -1;
+        if (a.time.getTime() > b.time.getTime()) return 1;
+        return 0;
+      });
 
-              claims[id - 1].winner = false;
-              fabric[i][j] = "X";
+      let currentGuard = -1;
+      let sleepStart, sleepEnd;
+
+      let guardLogs = {};
+      let guardTotals = {};
+      records = records.forEach(({ min, log }) => {
+        switch (log) {
+          case "falls asleep":
+            sleepStart = min;
+            break;
+
+          case "wakes up":
+            sleepEnd = min;
+
+            for (let i = sleepStart; i < sleepEnd; i++) {
+              guardLogs[currentGuard][i]++;
+              guardTotals[currentGuard]++;
             }
-          }
+            break;
+
+          default:
+            currentGuard = log.match(/\d+/g);
+            if ("undefined" === typeof guardLogs[currentGuard]) {
+              guardLogs[currentGuard] = [...emptyArray];
+              guardTotals[currentGuard] = 0;
+            }
+
+            break;
         }
       });
-      console.log(claims.filter(c => c.winner));
+
+      let guardHighVal = -1,
+        guardHighIdx = -1;
+
+      Object.keys(guardTotals).forEach(k => {
+        if (guardTotals[k] > guardHighVal) {
+          guardHighVal = guardTotals[k];
+          guardHighIdx = k;
+        }
+      });
+
+      let maxVal = -1,
+        maxIdx = -1;
+
+      guardLogs[guardHighIdx].forEach((val, idx) => {
+        if (val > maxVal) {
+          maxVal = val;
+          maxIdx = idx;
+        }
+      });
+
+      console.log(maxVal, maxIdx, guardHighIdx);
+      console.log(guardHighIdx * maxIdx);
 
       process.exit(0);
     });
