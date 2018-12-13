@@ -45,14 +45,15 @@ function readInput() {
       for (let j = 0; j < alphabet.length; j++) {
         console.log(alphabet[j]);
         let safeData = (" " + data).slice(1); // clone the data string
-        safeData = safeData
-          .replace(alphabet[j], "")
-          .replace(alphabet[j].toUpperCase(), "");
+        let regex = new RegExp(alphabet[j], "gmi");
+        safeData = safeData.replace(regex, "");
 
         safeData = [...safeData.split("")];
+        console.log(safeData.length);
 
         len = safeData.length;
 
+        let done = false;
         while (!done) {
           exploder = -1;
           for (let i = 0; i < len - 1; i++) {
@@ -60,6 +61,7 @@ function readInput() {
             next = safeData[i + 1];
 
             if (current === undefined) {
+              console.log(min, safeData.length);
               min = Math.min(min, safeData.length);
               done = true;
               break;
